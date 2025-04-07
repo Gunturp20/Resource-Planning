@@ -52,7 +52,7 @@ export default function SymbolRateCalculator() {
   const [selectedBoq, setSelectedBoq] = useState("");
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/boq-list")
+    fetch("https://resource-planning.onrender.com/api/boq-list")
       .then((res) => res.json())
       .then((data) => {
         console.log("Data BoQ:", data);
@@ -76,7 +76,7 @@ export default function SymbolRateCalculator() {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/calculate", {
+      const response = await fetch("https://resource-planning.onrender.com/api/calculate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -118,7 +118,7 @@ export default function SymbolRateCalculator() {
 
     console.log("Mengunduh file:", selectedBoq);
 
-    fetch(`http://localhost:5000/api/download-boq/${selectedBoq}/${selectedModem}`)
+    fetch(`https://resource-planning.onrender.com/api/download-boq/${selectedBoq}/${selectedModem}`)
       .then((response) => {
         if (!response.ok) {
           throw new Error(`❌ Gagal mengunduh file: ${response.statusText}`);
