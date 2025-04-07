@@ -8,12 +8,11 @@ import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import "../globals.css";
 
-const modemData = [
-  { name: "HT2300", minSymbolRate: 2, maxSymbolRate: 236 },
-  { name: "UHP-100", minSymbolRate: 0.3, maxSymbolRate: 500 },
-  { name: "UHP-1000", minSymbolRate: 0.3, maxSymbolRate: 32 },
-  { name: "NEWTEC MDM3310", minSymbolRate: 0.32, maxSymbolRate: 20 },
-];
+type Modem = {
+  name: string;
+  minSymbolRate: number;
+  maxSymbolRate: number;
+};
 
 type ModcodOption = {
   label: string;
@@ -21,8 +20,14 @@ type ModcodOption = {
   fec: number;
 };
 
+const modemData: Modem[] = [
+  { name: "HT2300", minSymbolRate: 2, maxSymbolRate: 236 },
+  { name: "UHP-100", minSymbolRate: 0.3, maxSymbolRate: 500 },
+  { name: "UHP-1000", minSymbolRate: 0.3, maxSymbolRate: 32 },
+  { name: "NEWTEC MDM3310", minSymbolRate: 0.32, maxSymbolRate: 20 },
+];
 
-const modcodOptions = [
+const modcodOptions: ModcodOption[] = [
   { label: "QPSK 1/2", snr: 1.0, fec: 0.5 },
   { label: "QPSK 3/4", snr: 2.8, fec: 0.75 },
   { label: "8PSK 3/4", snr: 6.4, fec: 0.75 },
@@ -35,37 +40,34 @@ const rofOptions = ["0.05", "0.2", "0.25", "0.35"];
 
 export default function SymbolRateCalculator() {
   const [dataRate, setDataRate] = useState("");
-  const [selectedModcod, setSelectedModcod] = useState<ModcodOption | null>(null)
+  const [selectedModcod, setSelectedModcod] = useState<ModcodOption | null>(null);
   const [rof, setRof] = useState("0.2");
   const [margin, setMargin] = useState("");
   const [symbolRate, setSymbolRate] = useState("");
   const [bandwidth, setBandwidth] = useState("");
-  const [recommendedModems, setRecommendedModems] = useState([]);
-  const [selectedModem, setSelectedModem] = useState(null);
+  const [recommendedModems, setRecommendedModems] = useState<Modem[]>([]);
+  const [selectedModem, setSelectedModem] = useState<string | null>(null);
 
-  // State untuk BoQ
-  const [boqList, setBoqList] = useState([]);
+  const [boqList, setBoqList] = useState<string[]>([]);
   const [selectedBoq, setSelectedBoq] = useState("");
 
-  // Fetch daftar BoQ saat komponen dimuat
   useEffect(() => {
     fetch("http://localhost:5000/api/boq-list")
       .then((res) => res.json())
       .then((data) => {
-        console.log("Data BoQ:", data); // Debugging
-        if (data.boqFiles) {  // Perbaiki dari 'files' ke 'boqFiles'
+        console.log("Data BoQ:", data);
+        if (data.boqFiles) {
           setBoqList(data.boqFiles);
         } else {
           console.error("Error: Properti 'boqFiles' tidak ditemukan dalam respons", data);
-          setBoqList([]); // Pastikan tidak undefined
+          setBoqList([]);
         }
       })
       .catch((error) => {
         console.error("Error fetching BoQ list:", error);
-        setBoqList([]); // Tangani error agar tidak undefined
+        setBoqList([]);
       });
-  }, []);  
-  
+  }, []);
 
   const fetchSymbolRate = async () => {
     if (!dataRate || !selectedModcod) {
@@ -95,7 +97,9 @@ export default function SymbolRateCalculator() {
       setBandwidth(calculatedBandwidth);
 
       const suitableModems = modemData.filter(
-        (modem) => result.symbolRate >= modem.minSymbolRate && result.symbolRate <= modem.maxSymbolRate
+        (modem) =>
+          result.symbolRate >= modem.minSymbolRate &&
+          result.symbolRate <= modem.maxSymbolRate
       );
       setRecommendedModems(suitableModems);
       setSelectedModem(suitableModems.length > 0 ? suitableModems[0].name : null);
@@ -111,9 +115,9 @@ export default function SymbolRateCalculator() {
       alert("⚠️ Pilih BoQ terlebih dahulu!");
       return;
     }
-  
-    console.log("Mengunduh file:", selectedBoq); // Debugging
-  
+
+    console.log("Mengunduh file:", selectedBoq);
+
     fetch(`http://localhost:5000/api/download-boq/${selectedBoq}/${selectedModem}`)
       .then((response) => {
         if (!response.ok) {
@@ -125,7 +129,7 @@ export default function SymbolRateCalculator() {
         if (blob.size === 0) {
           throw new Error("⚠️ File kosong, periksa backend!");
         }
-  
+
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
@@ -140,8 +144,6 @@ export default function SymbolRateCalculator() {
         alert(error.message || "❌ Terjadi kesalahan saat mengunduh file.");
       });
   };
-  
-    
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -153,13 +155,15 @@ export default function SymbolRateCalculator() {
             <Input type="number" value={dataRate} onChange={(e) => setDataRate(e.target.value)} />
 
             <Label>Modcod</Label>
-            <Select onValueChange={(value) => setSelectedModcod(modcodOptions.find(m => m.label === value))}>
+            <Select onValueChange={(value) => setSelectedModcod(modcodOptions.find(m => m.label === value) || null)}>
               <SelectTrigger>
                 <SelectValue placeholder="Pilih Modcod" />
               </SelectTrigger>
               <SelectContent>
                 {modcodOptions.map((mod) => (
-                  <SelectItem key={mod.label} value={mod.label}>{mod.label}</SelectItem>
+                  <SelectItem key={mod.label} value={mod.label}>
+                    {mod.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -169,17 +173,19 @@ export default function SymbolRateCalculator() {
               <span
                 className="ml-2 cursor-pointer text-blue-500"
                 title="Rof berpengaruh terhadap BW semakin besar ROF maka BW yang dibutuhkan semakin besar."
-                >
-                  ℹ️
-                </span>
-              </Label>
+              >
+                ℹ️
+              </span>
+            </Label>
             <Select onValueChange={(value) => setRof(value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Pilih ROF" />
               </SelectTrigger>
               <SelectContent>
                 {rofOptions.map((rofVal) => (
-                  <SelectItem key={rofVal} value={rofVal}>{rofVal}</SelectItem>
+                  <SelectItem key={rofVal} value={rofVal}>
+                    {rofVal}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -207,7 +213,9 @@ export default function SymbolRateCalculator() {
                   </SelectTrigger>
                   <SelectContent>
                     {recommendedModems.map((modem) => (
-                      <SelectItem key={modem.name} value={modem.name}>{modem.name}</SelectItem>
+                      <SelectItem key={modem.name} value={modem.name}>
+                        {modem.name}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -221,12 +229,18 @@ export default function SymbolRateCalculator() {
               </SelectTrigger>
               <SelectContent>
                 {boqList.map((boq, index) => (
-                  <SelectItem key={index} value={boq}>{boq}</SelectItem>
+                  <SelectItem key={index} value={boq}>
+                    {boq}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
-            <Button className="w-full text-white bg-green-600 hover:bg-green-700" onClick={handleDownloadBoq} disabled={!selectedBoq}>
+            <Button
+              className="w-full text-white bg-green-600 hover:bg-green-700"
+              onClick={handleDownloadBoq}
+              disabled={!selectedBoq}
+            >
               📥 Download BoQ
             </Button>
           </div>
