@@ -11,6 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 const BOQ_FOLDER = path.join(__dirname, "BoQ");
+const TEST_FOLDER = path.join(__dirname, "TestResults"); // ✅ Folder hasil test
 
 // Endpoint GET untuk informasi API
 app.get("/api/calculate", (req, res) => {
@@ -58,14 +59,12 @@ app.get("/api/download-boq/:boqName/:modem", (req, res) => {
     const { boqName, modem } = req.params;
     const filePath = path.join(BOQ_FOLDER, boqName);
     const newFilePath = path.join(BOQ_FOLDER, `Updated_${boqName}`);
-    
 
     if (!fs.existsSync(filePath)) {
         console.error("❌ File BoQ tidak ditemukan:", filePath);
         return res.status(404).json({ error: "File BoQ tidak ditemukan" });
     }
 
-    // Jalankan skrip Python untuk memodifikasi file
     const command = `python modify_excel.py "${filePath}" "${newFilePath}" "${modem}"`;
     exec(command, (error, stdout, stderr) => {
         if (error) {
@@ -74,7 +73,6 @@ app.get("/api/download-boq/:boqName/:modem", (req, res) => {
         }
         console.log(stdout);
 
-        // Kirim file hasil modifikasi ke client
         res.download(newFilePath, `Updated_${boqName}`, (err) => {
             if (err) {
                 console.error("❌ Gagal mengirim file:", err);
@@ -83,13 +81,40 @@ app.get("/api/download-boq/:boqName/:modem", (req, res) => {
                 fs.unlink(newFilePath, (unlinkErr) => {
                     if (unlinkErr) {
                         console.error("❌ Gagal menghapus file sementara:", unlinkErr);
-                    } else{
+                    } else {
                         console.log("🗑️ File sementara dihapus.");
-                    }  
-                    
+                    }
                 });
             }
         });
+    });
+});
+
+// ✅ Endpoint untuk mendapatkan daftar file hasil test (PDF, Word, dll.)
+app.get("/api/test-list", (req, res) => {
+    fs.readdir(TEST_FOLDER, (err, files) => {
+        if (err) {
+            return res.status(500).json({ error: "Gagal membaca folder TestResults" });
+        }
+        res.json({ files });
+    });
+});
+
+// ✅ Endpoint untuk download file hasil test
+app.get("/api/download-test/:fileName", (req, res) => {
+    const { fileName } = req.params;
+    const filePath = path.join(TEST_FOLDER, fileName);
+
+    if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: "File tidak ditemukan" });
+    }
+
+    res.download(filePath, fileName, (err) => {
+        if (err) {
+            console.error("❌ Gagal mengirim file hasil test:", err);
+        } else {
+            console.log("📤 File test berhasil dikirim:", fileName);
+        }
     });
 });
 
