@@ -14,7 +14,7 @@ export default function Mode2() {
 
   // Fetch daftar file saat komponen dimount
   useEffect(() => {
-    fetch("http://localhost:5000/api/test-list")
+    fetch("https://resource-planning.onrender.com/api/test-list")
       .then((res) => res.json())
       .then((data) => {
         setTestFiles(data.files || []);
@@ -38,7 +38,7 @@ export default function Mode2() {
   const handleDownload = () => {
     if (!selectedFile) return alert("⚠️ Pilih file terlebih dahulu!");
     setLoading(true);
-    fetch(`http://localhost:5000/api/download-test/${selectedFile}`)
+    fetch(`https://resource-planning.onrender.com/api/download-test/${selectedFile}`)
       .then((res) => res.blob())
       .then((blob) => {
         const url = window.URL.createObjectURL(blob);
