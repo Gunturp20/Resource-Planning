@@ -57,16 +57,6 @@ export default function Mode2() {
         Test Result Resource Planning
       </h1>
 
-      <div className="bg-white p-6 rounded-2xl shadow-lg w-full max-w-md">
-        {/* 🔍 Search Input */}
-        <Input
-          type="text"
-          placeholder="Cari nama file..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="mb-4"
-        />
-
         {/* 🔽 Dropdown File */}
         <select
           className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-6"
