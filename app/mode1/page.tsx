@@ -8,13 +8,19 @@ import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import "../globals.css";
 
-
 const modemData = [
   { name: "HT2300", minSymbolRate: 2, maxSymbolRate: 236 },
   { name: "UHP-100", minSymbolRate: 0.3, maxSymbolRate: 500 },
   { name: "UHP-1000", minSymbolRate: 0.3, maxSymbolRate: 32 },
   { name: "NEWTEC MDM3310", minSymbolRate: 0.32, maxSymbolRate: 20 },
 ];
+
+type ModcodOption = {
+  label: string;
+  snr: number;
+  fec: number;
+};
+
 
 const modcodOptions = [
   { label: "QPSK 1/2", snr: 1.0, fec: 0.5 },
@@ -29,7 +35,7 @@ const rofOptions = ["0.05", "0.2", "0.25", "0.35"];
 
 export default function SymbolRateCalculator() {
   const [dataRate, setDataRate] = useState("");
-  const [selectedModcod, setSelectedModcod] = useState(null);
+  const [selectedModcod, setSelectedModcod] = useState<ModcodOption | null>(null)
   const [rof, setRof] = useState("0.2");
   const [margin, setMargin] = useState("");
   const [symbolRate, setSymbolRate] = useState("");
