@@ -6,8 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import * as XLSX from 'xlsx';
 import "../globals.css";
 
 
