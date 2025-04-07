@@ -10,12 +10,6 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-app.use(cors({
-    origin: 'https://resource-planning-faa5kgp5n-guntur-pratamas-projects.vercel.app/', // Atau bisa kamu set ke domain vercel langsung jika ingin lebih aman
-    methods: ['GET', 'POST'],
-  }));
-  
-
 const BOQ_FOLDER = path.join(__dirname, "BoQ");
 const TEST_FOLDER = path.join(__dirname, "TestResults"); // ✅ Folder hasil test
 
