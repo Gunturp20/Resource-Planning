@@ -38,7 +38,7 @@ export default function Mode2() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-white px-6">
       <div className="border-4 border-purple-400 rounded-xl p-8 w-full max-w-3xl">
-        <h1 className="text-center text-lg font-semibold mb-6">TEST RESULT FILES</h1>
+        <h1 className="text-center text-lg font-semibold mb-6">SOP & DATASHEET FILES</h1>
 
         {testFiles.length === 0 ? (
           <p className="text-center text-gray-500">Tidak ada file tersedia.</p>
