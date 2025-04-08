@@ -1,6 +1,5 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Download, Loader2 } from "lucide-react";
 import "../globals.css";
 
@@ -37,35 +36,41 @@ export default function Mode2() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 px-4">
-      <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">
-        Test Result Resource Planning
-      </h1>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-white px-6">
+      <div className="border-4 border-purple-400 rounded-xl p-8 w-full max-w-3xl">
+        <h1 className="text-center text-lg font-semibold mb-6">TEST RESULT FILES</h1>
 
-      <div className="bg-white p-6 rounded-2xl shadow-lg w-full max-w-md space-y-4">
         {testFiles.length === 0 ? (
           <p className="text-center text-gray-500">Tidak ada file tersedia.</p>
         ) : (
-          testFiles.map((file, index) => (
-            <Button
-              key={index}
-              className="w-full flex items-center justify-center bg-green-600 hover:bg-green-700 text-white"
-              onClick={() => handleDownload(file)}
-              disabled={downloadingFile === file}
-            >
-              {downloadingFile === file ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Mengunduh...
-                </>
-              ) : (
-                <>
-                  <Download className="w-4 h-4 mr-2" />
-                  {file}
-                </>
-              )}
-            </Button>
-          ))
+          <div className="space-y-2">
+            {testFiles.map((file, index) => (
+              <div
+                key={index}
+                className="flex justify-between items-center border border-black px-4 py-2 text-sm bg-white"
+              >
+                <span>{file}</span>
+                <span className="text-gray-500">Test Date</span>
+                <button
+                  onClick={() => handleDownload(file)}
+                  disabled={downloadingFile === file}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded"
+                >
+                  {downloadingFile === file ? (
+                    <span className="flex items-center">
+                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                      Mengunduh...
+                    </span>
+                  ) : (
+                    <span className="flex items-center">
+                      <Download className="w-4 h-4 mr-1" />
+                      Download
+                    </span>
+                  )}
+                </button>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>
