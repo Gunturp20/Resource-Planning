@@ -12,6 +12,7 @@ app.use(express.json());
 
 const BOQ_FOLDER = path.join(__dirname, "BoQ");
 const TEST_FOLDER = path.join(__dirname, "TestResults"); // ✅ Folder hasil test
+const SOP_FOLDER = path.join(__dirname, "SOPFiles"); // ✅ Folder SOP
 
 // Endpoint GET untuk informasi API
 app.get("/api/calculate", (req, res) => {
@@ -104,6 +105,34 @@ app.get("/api/test-list", (req, res) => {
 app.get("/api/download-test/:fileName", (req, res) => {
     const { fileName } = req.params;
     const filePath = path.join(TEST_FOLDER, fileName);
+
+    if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: "File tidak ditemukan" });
+    }
+
+    res.download(filePath, fileName, (err) => {
+        if (err) {
+            console.error("❌ Gagal mengirim file hasil test:", err);
+        } else {
+            console.log("📤 File test berhasil dikirim:", fileName);
+        }
+    });
+});
+
+// ✅ Endpoint untuk mendapatkan daftar file sop (PDF, Word, dll.)
+app.get("/api/sop-list", (req, res) => {
+    fs.readdir(SOP_FOLDER, (err, files) => {
+        if (err) {
+            return res.status(500).json({ error: "Gagal membaca folder sopfiles" });
+        }
+        res.json({ files });
+    });
+});
+
+// ✅ Endpoint untuk download file hasil test
+app.get("/api/download-sop/:fileName", (req, res) => {
+    const { fileName } = req.params;
+    const filePath = path.join(SOP_FOLDER, fileName);
 
     if (!fs.existsSync(filePath)) {
         return res.status(404).json({ error: "File tidak ditemukan" });
