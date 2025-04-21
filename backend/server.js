@@ -144,15 +144,36 @@ app.get("/api/download-test/:fileName", (req, res) => {
     });
 });
 
-// ✅ Endpoint untuk mendapatkan daftar file sop (PDF, Word, dll.)
 app.get("/api/sop-list", (req, res) => {
-    fs.readdir(SOP_FOLDER, (err, files) => {
+    fs.readFile(testDatesPath, "utf-8", (err, data) => {
         if (err) {
-            return res.status(500).json({ error: "Gagal membaca folder sopfiles" });
+            console.error("❌ Gagal membaca testDates.json:", err);
+            return res.status(500).json({ error: "Gagal membaca data tanggal file" });
         }
-        res.json({ files });
+
+        let testDates;
+        try {
+            testDates = JSON.parse(data);
+        } catch (parseError) {
+            console.error("❌ Gagal parsing testDates.json:", parseError);
+            return res.status(500).json({ error: "Data tanggal tidak valid" });
+        }
+
+        fs.readdir(SOP_FOLDER, (err, files) => {
+            if (err) {
+                return res.status(500).json({ error: "Gagal membaca folder sopfiles" });
+            }
+
+            const fileData = files.map((file) => ({
+                filename: file,
+                testDate: testDates[file] || "Tanggal tidak diketahui"
+            }));
+
+            res.json({ files: fileData });
+        });
     });
 });
+
 
 // ✅ Endpoint untuk download file hasil test
 app.get("/api/download-sop/:fileName", (req, res) => {
