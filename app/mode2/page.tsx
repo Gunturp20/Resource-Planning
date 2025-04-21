@@ -4,7 +4,7 @@ import { Download, Loader2 } from "lucide-react";
 import "../globals.css";
 
 export default function Mode2() {
-  const [testFiles, setTestFiles] = useState<string[]>([]);
+  const [testFiles, setTestFiles] = useState<{ filename: string; testDate: string }[]>([]);
   const [downloadingFile, setDownloadingFile] = useState<string | null>(null);
 
   useEffect(() => {
@@ -49,14 +49,14 @@ export default function Mode2() {
                 key={index}
                 className="flex justify-between items-center border border-black px-4 py-2 text-sm bg-white"
               >
-                <span>{file}</span>
-                <span className="text-gray-500">Test Date</span>
+                <span>{file.filename}</span>
+                <span className="text-gray-500">{file.testDate}</span>
                 <button
-                  onClick={() => handleDownload(file)}
-                  disabled={downloadingFile === file}
+                  onClick={() => handleDownload(file.filename)}
+                  disabled={downloadingFile === file.filename}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded"
                 >
-                  {downloadingFile === file ? (
+                  {downloadingFile === file.filename ? (
                     <span className="flex items-center">
                       <Loader2 className="w-4 h-4 mr-1 animate-spin" />
                       Mengunduh...

@@ -91,15 +91,34 @@ app.get("/api/download-boq/:boqName/:modem", (req, res) => {
     });
 });
 
-// ✅ Endpoint untuk mendapatkan daftar file hasil test (PDF, Word, dll.)
+// ✅ Endpoint untuk mendapatkan daftar file hasil test (PDF, Word, dll.) DENGAN testDate manual
 app.get("/api/test-list", (req, res) => {
+    // Mapping manual: nama file ➔ tanggal test
+    const testDates = {
+        "POC M2M Robustel-Resume.pdf": "2020-08-20",
+        "PoC Nawasena-PSN Kejari Belitung.docx": "2023-01-15",
+        "Report Test Combiner ETL.pdf": "2024-06-10",
+        "SUMMARY BONDING 3 ISP.docx": "2025-06-10",
+        "Test Femtocell.pdf": "2025-06-10",
+        // Tambahkan sendiri sesuai kebutuhan
+    };
+
     fs.readdir(TEST_FOLDER, (err, files) => {
         if (err) {
             return res.status(500).json({ error: "Gagal membaca folder TestResults" });
         }
-        res.json({ files });
+
+        const fileData = files.map((file) => {
+            return {
+                filename: file,
+                testDate: testDates[file] || "Tanggal tidak diketahui" // kalau belum di-mapping
+            };
+        });
+
+        res.json({ files: fileData });
     });
 });
+
 
 // ✅ Endpoint untuk download file hasil test
 app.get("/api/download-test/:fileName", (req, res) => {
