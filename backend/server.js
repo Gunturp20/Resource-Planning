@@ -56,9 +56,9 @@ app.get("/api/boq-list", (req, res) => {
     });
 });
 
-// 📌 Endpoint untuk mengambil dan memodifikasi BoQ dengan modem yang dipilih
 app.get("/api/download-boq/:boqName/:modem", (req, res) => {
     const { boqName, modem } = req.params;
+    const { type, buc, lnb, transceiver } = req.query;
     const filePath = path.join(BOQ_FOLDER, boqName);
     const newFilePath = path.join(BOQ_FOLDER, `Updated_${boqName}`);
 
@@ -67,12 +67,22 @@ app.get("/api/download-boq/:boqName/:modem", (req, res) => {
         return res.status(404).json({ error: "File BoQ tidak ditemukan" });
     }
 
-    const command = `python modify_excel.py "${filePath}" "${newFilePath}" "${modem}"`;
+    let command = `python modify_excel.py "${filePath}" "${newFilePath}" "${modem}"`;
+
+    if (type === "BUC_LNB") {
+        command += ` "${buc || ''}" "${lnb || ''}" ""`;
+    } else if (type === "Transceiver") {
+        command += ` "" "" "${transceiver || ''}"`;
+    } else {
+        command += ` "" "" ""`; // Default kosong semua
+    }
+
     exec(command, (error, stdout, stderr) => {
         if (error) {
             console.error("❌ Error saat menjalankan skrip Python:", error);
             return res.status(500).json({ error: "Gagal memproses file BoQ" });
         }
+
         console.log(stdout);
 
         res.download(newFilePath, `Updated_${boqName}`, (err) => {
@@ -91,6 +101,7 @@ app.get("/api/download-boq/:boqName/:modem", (req, res) => {
         });
     });
 });
+
 
 // ✅ Endpoint untuk mendapatkan daftar file hasil test (PDF, Word, dll.) DENGAN testDate manual
 app.get("/api/test-list", (req, res) => {
