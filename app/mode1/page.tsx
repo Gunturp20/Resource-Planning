@@ -38,15 +38,6 @@ const modcodOptions: ModcodOption[] = [
 
 const rofOptions = ["0.05", "0.2", "0.25", "0.35"];
 
-const [selectedPerangkatTambahan, setSelectedPerangkatTambahan] = useState("");
-const [selectedBuc, setSelectedBuc] = useState("");
-const [selectedLnb, setSelectedLnb] = useState("");
-const [selectedTransceiver, setSelectedTransceiver] = useState("");
-
-const bucOptions = ["2W", "4W", "8W", "16W", "25W", "40W"];
-const lnbOptions = ["Standard", "Low Noise", "PLL", "External Ref"];
-const transceiverOptions = ["RevGo 3Watt", "Skyware HB220", "Skyware XRF"];
-
 export default function SymbolRateCalculator() {
   const [dataRate, setDataRate] = useState("");
   const [selectedModcod, setSelectedModcod] = useState<ModcodOption | null>(null);
@@ -118,8 +109,6 @@ export default function SymbolRateCalculator() {
       setSymbolRate("Error");
     }
   };
-
-  
 
   const handleDownloadBoq = () => {
     if (!selectedBoq) {
