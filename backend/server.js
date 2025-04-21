@@ -13,6 +13,7 @@ app.use(express.json());
 const BOQ_FOLDER = path.join(__dirname, "BoQ");
 const TEST_FOLDER = path.join(__dirname, "TestResults"); // ✅ Folder hasil test
 const SOP_FOLDER = path.join(__dirname, "SOPFiles"); // ✅ Folder SOP
+const testDatesPath = path.join(__dirname, "Testdates.json");
 
 // Endpoint GET untuk informasi API
 app.get("/api/calculate", (req, res) => {
@@ -93,29 +94,34 @@ app.get("/api/download-boq/:boqName/:modem", (req, res) => {
 
 // ✅ Endpoint untuk mendapatkan daftar file hasil test (PDF, Word, dll.) DENGAN testDate manual
 app.get("/api/test-list", (req, res) => {
-    // Mapping manual: nama file ➔ tanggal test
-    const testDates = {
-        "POC M2M Robustel-Resume.pdf": "2020-08-20",
-        "PoC Nawasena-PSN Kejari Belitung.docx": "2023-01-15",
-        "Report Test Combiner ETL.pdf": "2024-06-10",
-        "SUMMARY BONDING 3 ISP.docx": "2025-06-10",
-        "Test Femtocell.pdf": "2025-06-10",
-        // Tambahkan sendiri sesuai kebutuhan
-    };
-
-    fs.readdir(TEST_FOLDER, (err, files) => {
+    fs.readFile(testDatesPath, "utf-8", (err, data) => {
         if (err) {
-            return res.status(500).json({ error: "Gagal membaca folder TestResults" });
+            console.error("❌ Gagal membaca Testdates.json:", err);
+            return res.status(500).json({ error: "Gagal membaca data tanggal test" });
         }
 
-        const fileData = files.map((file) => {
-            return {
-                filename: file,
-                testDate: testDates[file] || "Tanggal tidak diketahui" // kalau belum di-mapping
-            };
-        });
+        let testDates;
+        try {
+            testDates = JSON.parse(data);
+        } catch (parseError) {
+            console.error("❌ Gagal parsing testDates.json:", parseError);
+            return res.status(500).json({ error: "Data tanggal test tidak valid" });
+        }
 
-        res.json({ files: fileData });
+        fs.readdir(TEST_FOLDER, (err, files) => {
+            if (err) {
+                return res.status(500).json({ error: "Gagal membaca folder TestResults" });
+            }
+
+            const fileData = files.map((file) => {
+                return {
+                    filename: file,
+                    testDate: testDates[file] || "Tanggal tidak diketahui"
+                };
+            });
+
+            res.json({ files: fileData });
+        });
     });
 });
 
