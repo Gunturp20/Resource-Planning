@@ -49,6 +49,7 @@ export default function SymbolRateCalculator() {
   const [selectedModem, setSelectedModem] = useState<string | null>(null);
 
   const [selectedPerangkatTambahan, setSelectedPerangkatTambahan] = useState("");
+  const [selectedBuc, setSelectedBuc] = useState("");
   const [selectedLnb, setSelectedLnb] = useState("");
   const [selectedTransceiver, setSelectedTransceiver] = useState("");
 
@@ -234,6 +235,20 @@ export default function SymbolRateCalculator() {
 
                 {selectedPerangkatTambahan === "BUC_LNB" && (
                   <>
+                    <Label>Pilih BUC</Label>
+                    <Select onValueChange={setSelectedBuc}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih BUC" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {bucOptions.map((buc) => (
+                          <SelectItem key={buc} value={buc}>
+                            {buc}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
                     <Label>Pilih LNB</Label>
                     <Select onValueChange={setSelectedLnb}>
                       <SelectTrigger>
