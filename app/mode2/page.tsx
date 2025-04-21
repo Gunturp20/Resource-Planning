@@ -49,8 +49,13 @@ export default function Mode2() {
                 key={index}
                 className="flex justify-between items-center border border-black px-4 py-2 text-sm bg-white"
               >
-                <span>{file.filename}</span>
-                <span className="text-gray-500">{file.testDate}</span>
+                {/* File name dan tanggal ditumpuk */}
+                <div className="flex flex-col items-start w-3/4">
+                  <span className="font-medium">{file.filename}</span>
+                  <span className="text-gray-500 text-xs">{file.testDate}</span>
+                </div>
+
+                {/* Tombol Download */}
                 <button
                   onClick={() => handleDownload(file.filename)}
                   disabled={downloadingFile === file.filename}
