@@ -48,6 +48,15 @@ export default function SymbolRateCalculator() {
   const [recommendedModems, setRecommendedModems] = useState<Modem[]>([]);
   const [selectedModem, setSelectedModem] = useState<string | null>(null);
 
+  const [selectedPerangkatTambahan, setSelectedPerangkatTambahan] = useState("");
+  const [selectedBuc, setSelectedBuc] = useState("");
+  const [selectedLnb, setSelectedLnb] = useState("");
+  const [selectedTransceiver, setSelectedTransceiver] = useState("");
+
+  const bucOptions = ["2W", "4W", "8W", "16W", "25W", "40W"];
+  const lnbOptions = ["Standard", "Low Noise", "PLL", "External Ref"];
+  const transceiverOptions = ["RevGo 3Watt", "Skyware HB220", "Skyware XRF"];
+
   const [boqList, setBoqList] = useState<string[]>([]);
   const [selectedBoq, setSelectedBoq] = useState("");
 
@@ -55,11 +64,9 @@ export default function SymbolRateCalculator() {
     fetch("https://resource-planning.onrender.com/api/boq-list")
       .then((res) => res.json())
       .then((data) => {
-        console.log("Data BoQ:", data);
         if (data.boqFiles) {
           setBoqList(data.boqFiles);
         } else {
-          console.error("Error: Properti 'boqFiles' tidak ditemukan dalam respons", data);
           setBoqList([]);
         }
       })
@@ -116,8 +123,6 @@ export default function SymbolRateCalculator() {
       return;
     }
 
-    console.log("Mengunduh file:", selectedBoq);
-
     fetch(`https://resource-planning.onrender.com/api/download-boq/${selectedBoq}/${selectedModem}`)
       .then((response) => {
         if (!response.ok) {
@@ -168,15 +173,7 @@ export default function SymbolRateCalculator() {
               </SelectContent>
             </Select>
 
-            <Label>
-              Roll-Off Factor
-              <span
-                className="ml-2 cursor-pointer text-blue-500"
-                title="Rof berpengaruh terhadap BW semakin besar ROF maka BW yang dibutuhkan semakin besar."
-              >
-                ℹ️
-              </span>
-            </Label>
+            <Label>Roll-Off Factor</Label>
             <Select onValueChange={(value) => setRof(value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Pilih ROF" />
@@ -222,6 +219,73 @@ export default function SymbolRateCalculator() {
               </div>
             )}
 
+            {/* Pilihan Perangkat Tambahan */}
+            {recommendedModems.length > 0 && (
+              <>
+                <Label className="mt-4">Pilih Perangkat Tambahan</Label>
+                <Select onValueChange={setSelectedPerangkatTambahan}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih Perangkat Tambahan" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="BUC_LNB">BUC & LNB</SelectItem>
+                    <SelectItem value="Transceiver">Transceiver</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {selectedPerangkatTambahan === "BUC_LNB" && (
+                  <>
+                    <Label>Pilih BUC</Label>
+                    <Select onValueChange={setSelectedBuc}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih BUC" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {bucOptions.map((buc) => (
+                          <SelectItem key={buc} value={buc}>
+                            {buc}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Label>Pilih LNB</Label>
+                    <Select onValueChange={setSelectedLnb}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih LNB" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {lnbOptions.map((lnb) => (
+                          <SelectItem key={lnb} value={lnb}>
+                            {lnb}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </>
+                )}
+
+                {selectedPerangkatTambahan === "Transceiver" && (
+                  <>
+                    <Label>Pilih Transceiver</Label>
+                    <Select onValueChange={setSelectedTransceiver}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih Transceiver" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {transceiverOptions.map((trx) => (
+                          <SelectItem key={trx} value={trx}>
+                            {trx}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </>
+                )}
+              </>
+            )}
+
+            {/* Pilih Template BoQ */}
             <Label>Pilih Template BoQ</Label>
             <Select onValueChange={setSelectedBoq}>
               <SelectTrigger>
