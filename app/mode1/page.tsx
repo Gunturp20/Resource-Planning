@@ -32,6 +32,7 @@ const modcodOptions: ModcodOption[] = [
   { label: "QPSK 3/4", snr: 2.8, fec: 0.75 },
   { label: "8PSK 3/4", snr: 6.4, fec: 0.75 },
   { label: "16APSK 2/3", snr: 9.2, fec: 0.6667 },
+  { label: "16APSK 4/5", snr: 10.5, fec: 0.8 },
   { label: "16APSK 5/6", snr: 11.5, fec: 0.8333 },
   { label: "32APSK 3/4", snr: 13.2, fec: 0.75 },
 ];
