@@ -24,7 +24,7 @@ const initialTable: TableRow[] = [
   { modcod: "8PSK 3/4", snrRequired: 9, snrAvailable: 8, status: "", maxDataRateMbps: null, symbolRateMsps: null, bandwidthMhz: null },
 ];
 
-export default function CapacityTableCalculator() {
+export default function CapacityTable() {
   const [selectedAntenna, setSelectedAntenna] = useState<string | null>(null);
   const [selectedBuc, setSelectedBuc] = useState<string | null>(null);
   const [resultTable, setResultTable] = useState<TableRow[]>(initialTable);
@@ -35,22 +35,31 @@ export default function CapacityTableCalculator() {
       return;
     }
 
-    const antennaGain = Number(selectedAntenna);
+    const antennaGainMap: any = {
+      "0.97": 38,
+      "1.2": 42,
+      "1.8": 45,
+      "2.4": 47,
+    };
+
+    const antennaGain = antennaGainMap[selectedAntenna];
     const bucPower = Number(selectedBuc);
 
-    const updated = initialTable.map(row => {
+    const updated = initialTable.map((row) => {
       const margin = row.snrAvailable - row.snrRequired;
-      const status = margin >= 0 ? "OK" : "NOK";
+      const status = margin >= 0 ? "OK ✅" : "NOK ❌";
 
       const maxDataRateMbps =
-        status === "OK" ? (antennaGain * bucPower * 0.5).toFixed(1) : null;
+        status.includes("OK")
+          ? (antennaGain * bucPower * 0.5).toFixed(1)
+          : null;
 
       return {
         ...row,
         status,
         maxDataRateMbps,
-        symbolRateMsps: status === "OK" ? 3.2 : null,
-        bandwidthMhz: status === "OK" ? 3.5 : null,
+        symbolRateMsps: status.includes("OK") ? 3.2 : null,
+        bandwidthMhz: status.includes("OK") ? 3.5 : null,
       };
     });
 
@@ -58,31 +67,28 @@ export default function CapacityTableCalculator() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 p-6">
-      <Card className="w-full max-w-5xl shadow-xl bg-white">
-        <CardContent className="space-y-6">
-          <h2 className="text-2xl font-bold text-center">
-            Capacity Planning Table
-          </h2>
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <Card className="w-full max-w-4xl shadow-lg p-6 bg-white">
+        <h2 className="text-xl font-semibold mb-4 text-center">Resource Planning Table</h2>
+        <CardContent>
+          <div className="space-y-4">
 
-          {/* Antenna */}
-          <div>
-            <Label>Pilih Antenna Gain (dBi)</Label>
+            {/* Antenna */}
+            <Label>Pilih Ukuran Antenna (m)</Label>
             <Select onValueChange={(val) => setSelectedAntenna(val)}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Pilih Antenna" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="38">38 dBi</SelectItem>
-                <SelectItem value="42">42 dBi</SelectItem>
-                <SelectItem value="45">45 dBi</SelectItem>
+                <SelectItem value="0.97">0.97m Ku</SelectItem>
+                <SelectItem value="1.2">1.2m Ku</SelectItem>
+                <SelectItem value="1.8">1.8m Ku</SelectItem>
+                <SelectItem value="2.4">2.4m Ku</SelectItem>
               </SelectContent>
             </Select>
-          </div>
 
-          {/* BUC */}
-          <div>
-            <Label>Pilih BUC Power (Watt)</Label>
+            {/* BUC */}
+            <Label>Pilih BUC (Watt)</Label>
             <Select onValueChange={(val) => setSelectedBuc(val)}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Pilih BUC" />
@@ -91,37 +97,36 @@ export default function CapacityTableCalculator() {
                 <SelectItem value="4">4W</SelectItem>
                 <SelectItem value="8">8W</SelectItem>
                 <SelectItem value="16">16W</SelectItem>
+                <SelectItem value="25">25W</SelectItem>
               </SelectContent>
             </Select>
-          </div>
 
-          <Button className="w-full bg-blue-600 text-white" onClick={calculateTable}>
-            🔍 Hitung Capacity Table
-          </Button>
+            {/* Button Calculate */}
+            <Button className="w-full bg-blue-600 text-white hover:bg-blue-700" onClick={calculateTable}>
+              Hitung
+            </Button>
 
-          {/* Table Output */}
-          <div className="overflow-x-auto">
-            <table className="min-w-full border border-gray-300 text-center">
-              <thead className="bg-gray-100">
+            {/* Table */}
+            <table className="w-full border mt-4 text-sm">
+              <thead className="bg-gray-200">
                 <tr>
                   <th className="border p-2">Modcod</th>
-                  <th className="border p-2">SNR Required</th>
-                  <th className="border p-2">SNR Available</th>
+                  <th className="border p-2">SNR Req</th>
+                  <th className="border p-2">SNR Avail</th>
                   <th className="border p-2">Status</th>
                   <th className="border p-2">Max Data Rate (Mbps)</th>
                   <th className="border p-2">Symbol Rate (Msps)</th>
-                  <th className="border p-2">Bandwidth (MHz)</th>
+                  <th className="border p-2">BW (MHz)</th>
                 </tr>
               </thead>
+
               <tbody>
-                {resultTable.map((row, i) => (
-                  <tr key={i}>
+                {resultTable.map((row, idx) => (
+                  <tr key={idx}>
                     <td className="border p-2">{row.modcod}</td>
                     <td className="border p-2">{row.snrRequired}</td>
                     <td className="border p-2">{row.snrAvailable}</td>
-                    <td className={`border p-2 font-bold ${row.status === "OK" ? "text-green-600" : "text-red-600"}`}>
-                      {row.status}
-                    </td>
+                    <td className="border p-2">{row.status}</td>
                     <td className="border p-2">{row.maxDataRateMbps ?? "-"}</td>
                     <td className="border p-2">{row.symbolRateMsps ?? "-"}</td>
                     <td className="border p-2">{row.bandwidthMhz ?? "-"}</td>
@@ -129,8 +134,8 @@ export default function CapacityTableCalculator() {
                 ))}
               </tbody>
             </table>
-          </div>
 
+          </div>
         </CardContent>
       </Card>
     </div>
