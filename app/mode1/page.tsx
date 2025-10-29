@@ -1,249 +1,137 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import "../globals.css";
 
-type Modem = {
-  name: string;
-  minSymbolRate: number;
-  maxSymbolRate: number;
-};
+interface TableRow {
+  modcod: string;
+  snrRequired: number;
+  snrAvailable: number;
+  status: string;
+  maxDataRateMbps: number | null;
+  symbolRateMsps: number | null;
+  bandwidthMhz: number | null;
+}
 
-type ModcodOption = {
-  label: string;
-  snr: number;
-  fec: number;
-};
-
-const modemData: Modem[] = [
-  { name: "HT2300", minSymbolRate: 2, maxSymbolRate: 236 },
-  { name: "UHP-100", minSymbolRate: 0.3, maxSymbolRate: 500 },
-  { name: "UHP-1000", minSymbolRate: 0.3, maxSymbolRate: 32 },
-  { name: "NEWTEC MDM3310", minSymbolRate: 0.32, maxSymbolRate: 20 },
+const antennaOptions = [
+  { label: "0.97m Ku", value: "0.97" },
+  { label: "1.2m Ku", value: "1.2" },
+  { label: "1.8m Ku", value: "1.8" },
+  { label: "2.4m Ku", value: "2.4" },
 ];
 
-const modcodOptions: ModcodOption[] = [
-  { label: "QPSK 1/2", snr: 1.0, fec: 0.5 },
-  { label: "QPSK 3/4", snr: 2.8, fec: 0.75 },
-  { label: "8PSK 3/4", snr: 6.4, fec: 0.75 },
-  { label: "16APSK 2/3", snr: 9.2, fec: 0.6667 },
-  { label: "16APSK 5/6", snr: 11.5, fec: 0.8333 },
-  { label: "32APSK 3/4", snr: 13.2, fec: 0.75 },
+const bucOptions = [
+  { label: "4W", value: "4" },
+  { label: "8W", value: "8" },
+  { label: "16W", value: "16" },
 ];
 
-const rofOptions = ["0.05", "0.2", "0.25", "0.35"];
+export default function CapacityPlanner() {
+  const [selectedAntenna, setSelectedAntenna] = useState<string | null>(null);
+  const [selectedBuc, setSelectedBuc] = useState<string | null>(null);
+  const [resultTable, setResultTable] = useState<TableRow[]>([]);
 
-export default function SymbolRateCalculator() {
-  const [dataRate, setDataRate] = useState("");
-  const [selectedModcod, setSelectedModcod] = useState<ModcodOption | null>(null);
-  const [rof, setRof] = useState("0.2");
-  const [margin, setMargin] = useState("");
-  const [symbolRate, setSymbolRate] = useState("");
-  const [bandwidth, setBandwidth] = useState("");
-  const [recommendedModems, setRecommendedModems] = useState<Modem[]>([]);
-  const [selectedModem, setSelectedModem] = useState<string | null>(null);
-
-  const [boqList, setBoqList] = useState<string[]>([]);
-  const [selectedBoq, setSelectedBoq] = useState("");
-
-  useEffect(() => {
-    fetch("https://resource-planning.onrender.com/api/boq-list")
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("Data BoQ:", data);
-        if (data.boqFiles) {
-          setBoqList(data.boqFiles);
-        } else {
-          console.error("Error: Properti 'boqFiles' tidak ditemukan dalam respons", data);
-          setBoqList([]);
-        }
-      })
-      .catch((error) => {
-        console.error("Error fetching BoQ list:", error);
-        setBoqList([]);
-      });
-  }, []);
-
-  const fetchSymbolRate = async () => {
-    if (!dataRate || !selectedModcod) {
-      alert("⚠️ Harap isi semua input sebelum menghitung.");
+  const fetchCapacityTable = async () => {
+    if (!selectedAntenna || !selectedBuc) {
+      alert("⚠️ Pilih antena dan BUC dulu!");
       return;
     }
 
     try {
-      const response = await fetch("https://resource-planning.onrender.com/api/calculate", {
+      const response = await fetch("https://resource-planning.onrender.com/api/capacity-table", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          dataRate: parseFloat(dataRate),
-          fec: selectedModcod.fec,
-          modulation: selectedModcod.label.split(" ")[0],
+          antenna: selectedAntenna,
+          buc: selectedBuc,
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("Server error. Periksa kembali backend.");
-      }
-
-      const result = await response.json();
-      setSymbolRate(result.symbolRate);
-
-      const calculatedBandwidth = (parseFloat(result.symbolRate) * (1 + parseFloat(rof))).toFixed(2);
-      setBandwidth(calculatedBandwidth);
-
-      const suitableModems = modemData.filter(
-        (modem) =>
-          result.symbolRate >= modem.minSymbolRate &&
-          result.symbolRate <= modem.maxSymbolRate
-      );
-      setRecommendedModems(suitableModems);
-      setSelectedModem(suitableModems.length > 0 ? suitableModems[0].name : null);
-    } catch (error) {
-      console.error("Error fetching symbol rate:", error);
-      alert("⚠️ Gagal menghitung symbol rate. Periksa koneksi atau server.");
-      setSymbolRate("Error");
+      const data = await response.json();
+      setResultTable(data);
+    } catch (err) {
+      console.error("Error:", err);
+      alert("Server gagal merespon endpoint /api/capacity-table");
     }
-  };
-
-  const handleDownloadBoq = () => {
-    if (!selectedBoq) {
-      alert("⚠️ Pilih BoQ terlebih dahulu!");
-      return;
-    }
-
-    console.log("Mengunduh file:", selectedBoq);
-
-    fetch(`https://resource-planning.onrender.com/api/download-boq/${selectedBoq}/${selectedModem}`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`❌ Gagal mengunduh file: ${response.statusText}`);
-        }
-        return response.blob();
-      })
-      .then((blob) => {
-        if (blob.size === 0) {
-          throw new Error("⚠️ File kosong, periksa backend!");
-        }
-
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `Updated_${selectedBoq}`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-      })
-      .catch((error) => {
-        console.error("Error downloading BoQ:", error);
-        alert(error.message || "❌ Terjadi kesalahan saat mengunduh file.");
-      });
   };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <Card className="w-full max-w-4xl shadow-lg p-6 bg-white">
-        <h2 className="text-xl font-semibold mb-4 text-center">Resource Planning LBA Modem</h2>
-        <CardContent>
-          <div className="space-y-4">
-            <Label>Data Rate (Mbps)</Label>
-            <Input type="number" value={dataRate} onChange={(e) => setDataRate(e.target.value)} />
+        <h2 className="text-xl font-semibold mb-4 text-center">VSAT Capacity Planner</h2>
 
-            <Label>Modcod</Label>
-            <Select onValueChange={(value) => setSelectedModcod(modcodOptions.find(m => m.label === value) || null)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Pilih Modcod" />
-              </SelectTrigger>
-              <SelectContent>
-                {modcodOptions.map((mod) => (
-                  <SelectItem key={mod.label} value={mod.label}>
-                    {mod.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        <CardContent className="space-y-4">
+          
+          {/* Antenna */}
+          <Label>Antenna</Label>
+          <Select onValueChange={setSelectedAntenna}>
+            <SelectTrigger>
+              <SelectValue placeholder="Pilih ukuran antenna" />
+            </SelectTrigger>
+            <SelectContent>
+              {antennaOptions.map((ant) => (
+                <SelectItem key={ant.value} value={ant.value}>
+                  {ant.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-            <Label>
-              Roll-Off Factor
-              <span
-                className="ml-2 cursor-pointer text-blue-500"
-                title="Rof berpengaruh terhadap BW semakin besar ROF maka BW yang dibutuhkan semakin besar."
-              >
-                ℹ️
-              </span>
-            </Label>
-            <Select onValueChange={(value) => setRof(value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Pilih ROF" />
-              </SelectTrigger>
-              <SelectContent>
-                {rofOptions.map((rofVal) => (
-                  <SelectItem key={rofVal} value={rofVal}>
-                    {rofVal}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {/* BUC */}
+          <Label>BUC Power</Label>
+          <Select onValueChange={setSelectedBuc}>
+            <SelectTrigger>
+              <SelectValue placeholder="Pilih power BUC" />
+            </SelectTrigger>
+            <SelectContent>
+              {bucOptions.map((b) => (
+                <SelectItem key={b.value} value={b.value}>
+                  {b.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-            <Label>Margin (dB)</Label>
-            <Input type="number" value={margin} onChange={(e) => setMargin(e.target.value)} />
+          <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white" onClick={fetchCapacityTable}>
+            Generate Capacity Table
+          </Button>
 
-            <Button className="w-full text-white bg-blue-600 hover:bg-blue-700" onClick={fetchSymbolRate}>
-              Hitung Symbol Rate
-            </Button>
-
-            {symbolRate && (
-              <div className="p-4 bg-gray-50 rounded-md text-center">
-                <p className="text-lg font-semibold">Symbol Rate: {symbolRate} Msps</p>
-                <p className="text-lg font-semibold">Bandwidth: {bandwidth} MHz</p>
-              </div>
-            )}
-
-            {recommendedModems.length > 0 && (
-              <div>
-                <Label>Pilih Rekomendasi Modem</Label>
-                <Select onValueChange={setSelectedModem}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Pilih Modem" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {recommendedModems.map((modem) => (
-                      <SelectItem key={modem.name} value={modem.name}>
-                        {modem.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            <Label>Pilih Template BoQ</Label>
-            <Select onValueChange={setSelectedBoq}>
-              <SelectTrigger>
-                <SelectValue placeholder="Pilih BoQ" />
-              </SelectTrigger>
-              <SelectContent>
-                {boqList.map((boq, index) => (
-                  <SelectItem key={index} value={boq}>
-                    {boq}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Button
-              className="w-full text-white bg-green-600 hover:bg-green-700"
-              onClick={handleDownloadBoq}
-              disabled={!selectedBoq}
-            >
-              📥 Download BoQ
-            </Button>
-          </div>
+          {/* Result Table */}
+          {resultTable.length > 0 && (
+            <div className="mt-6 overflow-x-auto">
+              <table className="w-full border-collapse border text-sm">
+                <thead className="bg-gray-100 border">
+                  <tr>
+                    <th className="p-2 border">Modcod</th>
+                    <th className="p-2 border">Req SNR</th>
+                    <th className="p-2 border">Avail SNR</th>
+                    <th className="p-2 border">Status</th>
+                    <th className="p-2 border">Max Data Rate</th>
+                    <th className="p-2 border">SR</th>
+                    <th className="p-2 border">BW</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {resultTable.map((row, idx) => (
+                    <tr key={idx} className="text-center">
+                      <td className="border p-1">{row.modcod}</td>
+                      <td className="border p-1">{row.snrRequired} dB</td>
+                      <td className="border p-1">{row.snrAvailable} dB</td>
+                      <td className={`border p-1 ${row.status === "OK" ? "text-green-600" : "text-red-600"}`}>
+                        {row.status}
+                      </td>
+                      <td className="border p-1">{row.maxDataRateMbps ?? "-"}</td>
+                      <td className="border p-1">{row.symbolRateMsps ?? "-"}</td>
+                      <td className="border p-1">{row.bandwidthMhz ?? "-"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
