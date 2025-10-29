@@ -3,7 +3,13 @@
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import "../globals.css";
 
@@ -35,14 +41,14 @@ export default function CapacityTable() {
       return;
     }
 
-    const antennaGainMap: any = {
+    const antennaGainMap: Record<string, number> = {
       "0.97": 38,
       "1.2": 42,
       "1.8": 45,
       "2.4": 47,
     };
 
-    const antennaGain = antennaGainMap[selectedAntenna];
+    const antennaGain = antennaGainMap[selectedAntenna] ?? 0;
     const bucPower = Number(selectedBuc);
 
     const updated = initialTable.map((row) => {
@@ -69,11 +75,11 @@ export default function CapacityTable() {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <Card className="w-full max-w-4xl shadow-lg p-6 bg-white">
-        <h2 className="text-xl font-semibold mb-4 text-center">Resource Planning Table</h2>
+        <h2 className="text-xl font-semibold mb-4 text-center">
+          Resource Planning Table
+        </h2>
         <CardContent>
           <div className="space-y-4">
-
-            {/* Antenna */}
             <Label>Pilih Ukuran Antenna (m)</Label>
             <Select onValueChange={(val) => setSelectedAntenna(val)}>
               <SelectTrigger className="w-full">
@@ -87,7 +93,6 @@ export default function CapacityTable() {
               </SelectContent>
             </Select>
 
-            {/* BUC */}
             <Label>Pilih BUC (Watt)</Label>
             <Select onValueChange={(val) => setSelectedBuc(val)}>
               <SelectTrigger className="w-full">
@@ -101,12 +106,13 @@ export default function CapacityTable() {
               </SelectContent>
             </Select>
 
-            {/* Button Calculate */}
-            <Button className="w-full bg-blue-600 text-white hover:bg-blue-700" onClick={calculateTable}>
+            <Button
+              className="w-full bg-blue-600 text-white hover:bg-blue-700"
+              onClick={calculateTable}
+            >
               Hitung
             </Button>
 
-            {/* Table */}
             <table className="w-full border mt-4 text-sm">
               <thead className="bg-gray-200">
                 <tr>
@@ -119,7 +125,6 @@ export default function CapacityTable() {
                   <th className="border p-2">BW (MHz)</th>
                 </tr>
               </thead>
-
               <tbody>
                 {resultTable.map((row, idx) => (
                   <tr key={idx}>
@@ -134,7 +139,6 @@ export default function CapacityTable() {
                 ))}
               </tbody>
             </table>
-
           </div>
         </CardContent>
       </Card>
